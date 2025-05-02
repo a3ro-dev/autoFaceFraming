@@ -19,7 +19,7 @@ setup(
     name="auto-face-framing",
     version="1.0.0",
     author="Akshat Kushwaha",
-    author_email="youremail@example.com",
+    author_email="akshatsingh14372@outlook.com",
     description="An automated face framing system that tracks faces and creates a virtual camera output",
     long_description=long_description,
     long_description_content_type="text/markdown",
