@@ -10,12 +10,15 @@ import sys
 import os
 import logging
 import platform
-from typing import Dict, Any, Optional
+import time
+from typing import Dict, Any, Optional, List, Tuple
+import shutil
 
 from .face_detector import FaceDetector
 from .tracker import Tracker
 from .camera_stream import CameraStream, load_config
 from .utils.video_utils import create_virtual_camera_output, IS_WINDOWS, IS_LINUX, IS_MAC
+from .utils.cli_spinner import CLISpinner, SpinnerStyle, RandomSpinner
 
 # Configure logging
 logging.basicConfig(
@@ -23,6 +26,106 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger('autoFaceFraming')
+
+# ANSI color codes for terminal output
+class Colors:
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+    BRIGHT_BLACK = '\033[90m'
+    BRIGHT_RED = '\033[91m'
+    BRIGHT_GREEN = '\033[92m'
+    BRIGHT_YELLOW = '\033[93m'
+    BRIGHT_BLUE = '\033[94m'
+    BRIGHT_MAGENTA = '\033[95m'
+    BRIGHT_CYAN = '\033[96m'
+    BRIGHT_WHITE = '\033[97m'
+    # Background colors
+    BG_BLACK = '\033[40m'
+    BG_RED = '\033[41m'
+    BG_GREEN = '\033[42m'
+    BG_YELLOW = '\033[43m'
+    BG_BLUE = '\033[44m'
+    BG_MAGENTA = '\033[45m'
+    BG_CYAN = '\033[46m'
+    BG_WHITE = '\033[47m'
+
+def get_terminal_size() -> Tuple[int, int]:
+    """Get terminal size (width, height)"""
+    return shutil.get_terminal_size((80, 24))
+
+
+def print_header() -> None:
+    """Print an attractive header for the application."""
+    term_width, _ = get_terminal_size()
+    
+    header = [
+        "░█████╗░██╗░░░██╗████████╗░█████╗░  ███████╗░█████╗░░█████╗░███████╗",
+        "██╔══██╗██║░░░██║╚══██╔══╝██╔══██╗  ██╔════╝██╔══██╗██╔══██╗██╔════╝",
+        "███████║██║░░░██║░░░██║░░░██║░░██║  █████╗░░███████║██║░░╚═╝█████╗░░",
+        "██╔══██║██║░░░██║░░░██║░░░██║░░██║  ██╔══╝░░██╔══██║██║░░██╗██╔══╝░░",
+        "██║░░██║╚██████╔╝░░░██║░░░╚█████╔╝  ██║░░░░░██║░░██║╚█████╔╝███████╗",
+        "╚═╝░░╚═╝░╚═════╝░░░░╚═╝░░░░╚════╝░  ╚═╝░░░░░╚═╝░░╚═╝░╚════╝░╚══════╝",
+        "",
+        "███████╗██████╗░░█████╗░███╗░░░███╗██╗███╗░░██╗░██████╗░",
+        "██╔════╝██╔══██╗██╔══██╗████╗░████║██║████╗░██║██╔════╝░",
+        "█████╗░░██████╔╝███████║██╔████╔██║██║██╔██╗██║██║░░██╗░",
+        "██╔══╝░░██╔══██╗██╔══██║██║╚██╔╝██║██║██║╚████║██║░░╚██╗",
+        "██║░░░░░██║░░██║██║░░██║██║░╚═╝░██║██║██║░╚███║╚██████╔╝",
+        "╚═╝░░░░░╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═╝╚═╝░░╚══╝░╚═════╝░"
+    ]
+    
+    # Center the header in the terminal
+    padding = max(0, (term_width - len(header[0])) // 2)
+    padding_str = " " * padding
+    
+    print()
+    for line in header:
+        print(f"{Colors.CYAN}{padding_str}{line}{Colors.RESET}")
+    print()
+
+
+def print_section_header(text: str) -> None:
+    """Print a section header with decorative elements."""
+    term_width, _ = get_terminal_size()
+    
+    # Calculate padding to center the header
+    total_length = min(term_width, max(40, len(text) + 10))
+    padding = max(0, (term_width - total_length) // 2)
+    
+    # Calculate inner padding for the text
+    inner_padding = max(0, (total_length - len(text) - 4) // 2)
+    
+    # Prepare the strings
+    top_border = padding * " " + "╭" + "─" * (total_length - 2) + "╮"
+    bottom_border = padding * " " + "╰" + "─" * (total_length - 2) + "╯"
+    text_line = padding * " " + "│" + " " * inner_padding + text + " " * (total_length - len(text) - inner_padding - 2) + "│"
+    
+    # Print the header
+    print()
+    print(f"{Colors.YELLOW}{top_border}{Colors.RESET}")
+    print(f"{Colors.YELLOW}{text_line}{Colors.RESET}")
+    print(f"{Colors.YELLOW}{bottom_border}{Colors.RESET}")
+    print()
+
+
+def print_info_line(label: str, value: str, color_value: str = Colors.RESET) -> None:
+    """Print an information line with proper formatting."""
+    print(f"{Colors.BRIGHT_WHITE}{label}: {color_value}{value}{Colors.RESET}")
+
+
+def print_list_item(item: str, indent: int = 2) -> None:
+    """Print a list item with bullet point."""
+    print(f"{' ' * indent}{Colors.BRIGHT_CYAN}•{Colors.RESET} {item}")
+
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments for the application."""
@@ -45,44 +148,52 @@ def parse_arguments() -> argparse.Namespace:
                       help='Show version information and exit')
     parser.add_argument('--camera-index', type=int, default=-1,
                       help='Camera index to use (default: -1 for auto-detection)')
+    parser.add_argument('--no-fancy', action='store_true',
+                      help='Disable fancy terminal UI')
+    parser.add_argument('--style', type=str, choices=[s.name.lower() for s in SpinnerStyle], default='braille',
+                      help='Spinner style for loading animations')
     return parser.parse_args()
 
 
 def check_dependencies() -> Dict[str, bool]:
     """Check if all required dependencies are installed."""
-    dependencies = {
-        'pyvirtualcam': False,
-        'psutil': False,
-        'opencv_gui': False
-    }
-    
-    import cv2
-    
-    # Check for v4l2loopback and pyvirtualcam
-    try:
-        import pyvirtualcam
-        dependencies['pyvirtualcam'] = True
-    except ImportError:
-        pass
+    with CLISpinner("Checking dependencies", style=SpinnerStyle.BRAILLE) as spinner:
+        dependencies = {
+            'pyvirtualcam': False,
+            'psutil': False,
+            'opencv_gui': False
+        }
         
-    # Check for psutil (required for system monitoring)
-    try:
-        import psutil
-        dependencies['psutil'] = True
-    except ImportError:
-        pass
-    
-    # Check if OpenCV has GUI support
-    try:
-        # Try to create a small window to test GUI capability
-        cv2.namedWindow("Test", cv2.WINDOW_NORMAL)
-        cv2.destroyWindow("Test")
-        dependencies['opencv_gui'] = True
-    except:
-        # If it fails, OpenCV was built without GUI support
-        dependencies['opencv_gui'] = False
+        import cv2
         
-    return dependencies
+        # Check for v4l2loopback and pyvirtualcam
+        try:
+            spinner.update_text("Checking PyVirtualCam")
+            import pyvirtualcam
+            dependencies['pyvirtualcam'] = True
+        except ImportError:
+            pass
+            
+        # Check for psutil (required for system monitoring)
+        try:
+            spinner.update_text("Checking psutil")
+            import psutil
+            dependencies['psutil'] = True
+        except ImportError:
+            pass
+        
+        # Check if OpenCV has GUI support
+        try:
+            spinner.update_text("Checking OpenCV GUI support")
+            # Try to create a small window to test GUI capability
+            cv2.namedWindow("Test", cv2.WINDOW_NORMAL)
+            cv2.destroyWindow("Test")
+            dependencies['opencv_gui'] = True
+        except:
+            # If it fails, OpenCV was built without GUI support
+            dependencies['opencv_gui'] = False
+            
+        return dependencies
 
 
 def get_default_config_path() -> str:
@@ -107,12 +218,57 @@ def get_default_config_path() -> str:
 def show_version() -> None:
     """Display version information."""
     from . import __version__, __author__, __twitter__, __github__
-    print(f"Auto Face Framing version {__version__}")
-    print(f"Developed by {__author__}")
-    print(f"Twitter: {__twitter__}")
-    print(f"GitHub: https://github.com/{__github__}")
-    print(f"Project: https://github.com/{__github__}/autoFaceFraming")
     
+    term_width, _ = get_terminal_size()
+    padding = " " * ((term_width - 50) // 2)
+    
+    print()
+    print(f"{padding}{Colors.BOLD}{Colors.BRIGHT_GREEN}Auto Face Framing version {__version__}{Colors.RESET}")
+    print(f"{padding}{Colors.BRIGHT_WHITE}Developed by {Colors.BRIGHT_CYAN}{__author__}{Colors.RESET}")
+    print(f"{padding}{Colors.BRIGHT_WHITE}Twitter: {Colors.BRIGHT_CYAN}{__twitter__}{Colors.RESET}")
+    print(f"{padding}{Colors.BRIGHT_WHITE}GitHub: {Colors.BRIGHT_CYAN}https://github.com/{__github__}{Colors.RESET}")
+    print(f"{padding}{Colors.BRIGHT_WHITE}Project: {Colors.BRIGHT_CYAN}https://github.com/{__github__}/autoFaceFraming{Colors.RESET}")
+    print()
+
+
+def show_platform_instructions(fancy: bool = True) -> None:
+    """Show platform-specific instructions based on the OS."""
+    if IS_WINDOWS:
+        if fancy:
+            print_section_header("Windows Instructions")
+            print_info_line("For Windows", "You need to install a virtual camera driver:", Colors.BRIGHT_YELLOW)
+            print_list_item("OBS Virtual Camera (install OBS Studio)")
+            print_list_item("Unity Capture (https://github.com/schellingb/UnityCapture)")
+            print()
+        else:
+            print("\nFor Windows, you need to install a virtual camera driver:")
+            print("- OBS Virtual Camera (install OBS Studio)")
+            print("- Unity Capture (https://github.com/schellingb/UnityCapture)\n")
+    
+    elif IS_LINUX:
+        if fancy:
+            print_section_header("Linux Instructions")
+            print_info_line("For Linux", "You need v4l2loopback installed:", Colors.BRIGHT_YELLOW)
+            print_list_item("Ubuntu/Debian: sudo apt install v4l2loopback-dkms")
+            print_list_item("Fedora: sudo dnf install v4l2loopback")
+            print_list_item("Load the module with: sudo modprobe v4l2loopback")
+            print()
+        else:
+            print("\nFor Linux, you need v4l2loopback:")
+            print("- Ubuntu/Debian: sudo apt install v4l2loopback-dkms")
+            print("- Fedora: sudo dnf install v4l2loopback")
+            print("- Load the module with: sudo modprobe v4l2loopback\n")
+    
+    elif IS_MAC:
+        if fancy:
+            print_section_header("macOS Instructions")
+            print_info_line("For macOS", "You need to install a virtual camera driver:", Colors.BRIGHT_YELLOW)
+            print_list_item("OBS Virtual Camera (install OBS Studio)")
+            print()
+        else:
+            print("\nFor macOS, you need to install a virtual camera driver:")
+            print("- OBS Virtual Camera (install OBS Studio)\n")
+
 
 def main() -> int:
     """
@@ -124,14 +280,29 @@ def main() -> int:
     # Parse command line arguments
     args = parse_arguments()
     
+    # Decide whether to use fancy UI
+    use_fancy_ui = not args.no_fancy
+    
+    # Get spinner style from arguments
+    spinner_style = SpinnerStyle[args.style.upper()] if args.style else SpinnerStyle.BRAILLE
+    
     # Show version and exit if requested
     if args.version:
+        if use_fancy_ui:
+            print_header()
         show_version()
         return 0
     
     # Configure logging
     if args.verbose:
         logger.setLevel(logging.DEBUG)
+    
+    # Show fancy header
+    if use_fancy_ui:
+        print_header()
+        print_section_header("Starting Auto Face Framing")
+    else:
+        print("\nStarting Auto Face Framing...\n")
     
     logger.debug("Starting Auto Face Framing")
     
@@ -142,8 +313,11 @@ def main() -> int:
         config_path = get_default_config_path()
     
     # Load configuration settings
-    logger.debug(f"Loading configuration from {config_path}")
-    config = load_config(config_path)
+    with CLISpinner("Loading configuration", style=spinner_style) as spinner:
+        logger.debug(f"Loading configuration from {config_path}")
+        config = load_config(config_path)
+        spinner.update_text(f"Loading configuration from {config_path}")
+        time.sleep(0.5)  # Small delay for visual effect
     
     # Parse resolution string to width and height
     if 'x' in args.resolution:
@@ -162,73 +336,122 @@ def main() -> int:
         frame_rate = config.get('camera', {}).get('frame_rate', args.fps)
         camera_index = config.get('camera', {}).get('camera_index', args.camera_index)
 
-    print("Initializing Auto Face Framing...")
-    print(f"Resolution: {width}x{height}")
-    print(f"Frame rate: {frame_rate} fps")
-    print(f"Camera index: {camera_index}")
+    if use_fancy_ui:
+        print_section_header("Configuration")
+        print_info_line("Resolution", f"{width}x{height}", Colors.BRIGHT_GREEN)
+        print_info_line("Frame rate", f"{frame_rate} fps", Colors.BRIGHT_GREEN)
+        print_info_line("Camera index", f"{camera_index}", Colors.BRIGHT_GREEN)
+        print()
+    else:
+        print("Initializing Auto Face Framing...")
+        print(f"Resolution: {width}x{height}")
+        print(f"Frame rate: {frame_rate} fps")
+        print(f"Camera index: {camera_index}")
     
     # Check dependencies
     dependencies = check_dependencies()
     
     # Check for virtual camera requirements
     if not args.no_virtual and not dependencies['pyvirtualcam']:
-        logger.warning("PyVirtualCam not found. Install with: pip install pyvirtualcam")
-        
-        # OS-specific instructions
-        if IS_WINDOWS:
-            logger.warning("For Windows, you also need to install one of these virtual camera drivers:")
-            logger.warning("- OBS Virtual Camera (install OBS Studio)")
-            logger.warning("- Unity Capture (https://github.com/schellingb/UnityCapture)")
-        elif IS_LINUX:
-            logger.warning("For Linux, you also need v4l2loopback:")
-            logger.warning("- Ubuntu/Debian: sudo apt install v4l2loopback-dkms")
-            logger.warning("- Fedora: sudo dnf install v4l2loopback")
-            logger.warning("Load the module with: sudo modprobe v4l2loopback")
-        elif IS_MAC:
-            logger.warning("For macOS, you also need to install a virtual camera driver:")
-            logger.warning("- OBS Virtual Camera (install OBS Studio)")
+        if use_fancy_ui:
+            print_section_header("Missing Dependencies")
+            print_info_line("PyVirtualCam", "Not found. Install with: pip install pyvirtualcam", Colors.BRIGHT_RED)
+            print()
+            show_platform_instructions(fancy=use_fancy_ui)
+        else:
+            logger.warning("PyVirtualCam not found. Install with: pip install pyvirtualcam")
+            show_platform_instructions(fancy=False)
             
         args.no_virtual = True  # Disable virtual camera if module not found
 
     # Check for psutil (required for system monitoring)
     if not dependencies['psutil']:
-        logger.warning("psutil not found. Install with: pip install psutil")
-        logger.warning("System monitoring will be disabled in the HUD")
+        if use_fancy_ui:
+            print_info_line("psutil", "Not found. Install with: pip install psutil", Colors.BRIGHT_YELLOW)
+            print_info_line("Note", "System monitoring will be disabled in the HUD", Colors.BRIGHT_WHITE)
+            print()
+        else:
+            logger.warning("psutil not found. Install with: pip install psutil")
+            logger.warning("System monitoring will be disabled in the HUD")
 
     # Check if OpenCV has GUI support
     show_window = False
     if not dependencies['opencv_gui']:
-        logger.info("Notice: OpenCV was built without GUI support. Preview window will be disabled.")
-        if IS_WINDOWS:
-            logger.info("To enable GUI on Windows, ensure you have the OpenCV with GUI support installed.")
-        elif IS_LINUX:
-            logger.info("To enable GUI on Linux, install the GTK+ development libraries and rebuild OpenCV.")
-        elif IS_MAC:
-            logger.info("To enable GUI on macOS, ensure you have a properly built version of OpenCV.")
+        if use_fancy_ui:
+            print_info_line("OpenCV GUI Support", "Not available", Colors.BRIGHT_YELLOW)
+            if IS_WINDOWS:
+                print_info_line("Note", "To enable GUI on Windows, ensure you have the OpenCV with GUI support installed.", Colors.BRIGHT_WHITE)
+            elif IS_LINUX:
+                print_info_line("Note", "To enable GUI on Linux, install the GTK+ development libraries and rebuild OpenCV.", Colors.BRIGHT_WHITE)
+            elif IS_MAC:
+                print_info_line("Note", "To enable GUI on macOS, ensure you have a properly built version of OpenCV.", Colors.BRIGHT_WHITE)
+            print()
+        else:
+            logger.info("Notice: OpenCV was built without GUI support. Preview window will be disabled.")
+            if IS_WINDOWS:
+                logger.info("To enable GUI on Windows, ensure you have the OpenCV with GUI support installed.")
+            elif IS_LINUX:
+                logger.info("To enable GUI on Linux, install the GTK+ development libraries and rebuild OpenCV.")
+            elif IS_MAC:
+                logger.info("To enable GUI on macOS, ensure you have a properly built version of OpenCV.")
         show_window = False
     elif args.no_window:
-        logger.info("Preview window disabled by user request.")
+        if use_fancy_ui:
+            print_info_line("Preview Window", "Disabled by user request", Colors.BRIGHT_YELLOW)
+            print()
+        else:
+            logger.info("Preview window disabled by user request.")
         show_window = False
     else:
-        logger.info("Preview window will be shown.")
+        if use_fancy_ui:
+            print_info_line("Preview Window", "Enabled", Colors.BRIGHT_GREEN)
+            print()
+        else:
+            logger.info("Preview window will be shown.")
         show_window = True
 
-    print("\nStarting camera with the following settings:")
-    print(f"- Debug HUD overlay: {'Enabled' if args.debug else 'Disabled'}")
-    print(f"- Output: {'Display only' if args.no_virtual else 'Virtual camera'}")
-    print(f"- Preview window: {'Disabled' if not show_window else 'Enabled'}")
-    print(f"- Operating system: {platform.system()} {platform.release()}")
-    print("\nPress Ctrl+C in the terminal to stop the application")
+    if use_fancy_ui:
+        print_section_header("Starting Camera")
+        print_info_line("Debug HUD overlay", "Enabled" if args.debug else "Disabled", Colors.BRIGHT_GREEN if args.debug else Colors.BRIGHT_YELLOW)
+        print_info_line("Output", "Virtual camera" if not args.no_virtual else "Display only", Colors.BRIGHT_GREEN if not args.no_virtual else Colors.BRIGHT_YELLOW)
+        print_info_line("Preview window", "Enabled" if show_window else "Disabled", Colors.BRIGHT_GREEN if show_window else Colors.BRIGHT_YELLOW)
+        print_info_line("Operating system", f"{platform.system()} {platform.release()}", Colors.BRIGHT_CYAN)
+        print()
+        print_info_line("Controls", "Press Ctrl+C in the terminal to stop the application", Colors.BRIGHT_MAGENTA)
+        print()
+    else:
+        print("\nStarting camera with the following settings:")
+        print(f"- Debug HUD overlay: {'Enabled' if args.debug else 'Disabled'}")
+        print(f"- Output: {'Display only' if args.no_virtual else 'Virtual camera'}")
+        print(f"- Preview window: {'Disabled' if not show_window else 'Enabled'}")
+        print(f"- Operating system: {platform.system()} {platform.release()}")
+        print("\nPress Ctrl+C in the terminal to stop the application")
 
     # Start camera stream
     camera_stream = None
     try:
-        camera_stream = CameraStream(
-            width=camera_resolution,
-            height=height,
-            fps=frame_rate,
-            camera_index=camera_index
-        )
+        with CLISpinner("Initializing camera", style=spinner_style) as spinner:
+            camera_stream = CameraStream(
+                width=camera_resolution,
+                height=height,
+                fps=frame_rate,
+                camera_index=camera_index
+            )
+            spinner.update_text("Camera initialized successfully")
+            time.sleep(0.5)  # Small delay for visual effect
+        
+        with CLISpinner("Starting video processing", style=spinner_style) as spinner:
+            spinner.update_text("Starting face detection")
+            time.sleep(0.5)  # Small delay for visual effect
+            spinner.update_text("Configuring tracking")
+            time.sleep(0.5)  # Small delay for visual effect
+            spinner.update_text("Preparing output streams")
+            time.sleep(0.5)  # Small delay for visual effect
+        
+        if use_fancy_ui:
+            print_section_header("Camera Started")
+            print_info_line("Status", "Running", Colors.BRIGHT_GREEN)
+            print()
         
         # Start the main processing loop
         camera_stream.start_stream(
@@ -240,19 +463,44 @@ def main() -> int:
         return 0
         
     except KeyboardInterrupt:
-        logger.info("\nApplication stopped by user")
+        if use_fancy_ui:
+            print()
+            print_section_header("Application Stopped")
+            print_info_line("Reason", "User interrupted (Ctrl+C)", Colors.BRIGHT_YELLOW)
+            print()
+        else:
+            logger.info("\nApplication stopped by user")
         return 0
     except Exception as e:
-        logger.error(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
+        if use_fancy_ui:
+            print()
+            print_section_header("Error")
+            print_info_line("Error Type", f"{type(e).__name__}", Colors.BRIGHT_RED)
+            print_info_line("Message", f"{str(e)}", Colors.BRIGHT_RED)
+            print()
+            print("Traceback:")
+            import traceback
+            traceback.print_exc()
+            print()
+        else:
+            logger.error(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
         return 1
     finally:
         # Make sure to release resources
         if camera_stream is not None:
-            camera_stream.release()
+            with CLISpinner("Closing camera and releasing resources", style=spinner_style) as spinner:
+                camera_stream.release()
+                spinner.update_text("Resources released successfully")
+                time.sleep(0.5)  # Small delay for visual effect
         
-        logger.info("Application terminated.")
+        if use_fancy_ui:
+            print_section_header("Application Terminated")
+            print_info_line("Status", "All resources released", Colors.BRIGHT_GREEN)
+            print()
+        else:
+            logger.info("Application terminated.")
 
 
 if __name__ == "__main__":
