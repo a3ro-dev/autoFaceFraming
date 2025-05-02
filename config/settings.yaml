@@ -1,0 +1,58 @@
+# Auto Face Framing Configuration File
+
+# Camera settings
+camera:
+  device: /dev/video0
+  resolution:
+    width: 1280
+    height: 720
+  frame_rate: 24
+  camera_index: -1  # -1 for auto-detection, 0 for first camera, 1 for second camera, etc.
+  
+# Face detection settings
+face_detection:
+  detector_type: "haar"  # Options: "haar" or "dnn"
+  confidence_threshold: 0.5  # Only used for DNN detector
+  min_face_size: 30  # Minimum face size to detect (pixels)
+  model: haarcascade_frontalface_default.xml
+  scale_factor: 1.1
+  min_neighbors: 5
+  
+# Tracking settings
+tracking:
+  smooth_factor: 0.05  # Lower = smoother but slower response (0.01-0.2)
+  zoom_scale_min: 0.5  # Minimum zoom factor
+  zoom_scale_max: 1.5  # Maximum zoom factor
+  adaptive_smoothing: true  # Use adaptive smoothing based on movement
+  max_no_face_frames: 30  # How long to maintain position with no face detected
+  zoom_in_threshold: 0.5
+  zoom_out_threshold: 1.5
+
+# Display settings
+display:
+  show_debug: true  # Show debug overlay
+  show_window: true  # Show preview window (in addition to virtual camera)
+  virtual_output: true  # Send to virtual camera
+  hud_alpha: 0.7  # HUD transparency (0.0-1.0)
+  
+# Advanced settings
+advanced:
+  stabilize_video: false  # Apply extra video stabilization (may impact performance)
+  use_threading: false  # Use threaded processing (experimental)
+  frame_buffer_size: 5  # Frame buffer size for smoother processing
+
+output:
+  virtual_camera: true
+  stabilization: true
+  output_resolution: 
+    width: 1280
+    height: 720
+  output_frame_rate: 24
+
+logging:
+  level: INFO
+  file: logs/application.log
+
+performance:
+  use_cuda: false
+  max_fps: 24

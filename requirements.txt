@@ -1,0 +1,11 @@
+opencv-python>=4.5.0
+opencv-python-headless>=4.5.0
+numpy>=1.19.0
+pyvirtualcam>=0.9.0
+scipy>=1.7.0
+pillow>=8.0.0
+pyyaml>=5.4.0
+imutils>=0.5.4
+psutil>=5.8.0
+matplotlib>=3.4.0
+tqdm>=4.60.0
