@@ -30,8 +30,8 @@ my-virtual-camera
 ## Installation
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/my-virtual-camera.git
-   cd my-virtual-camera
+   git clone https://github.com/a3ro-dev/autofaceframing
+   cd autofaceframing
    ```
 
 2. Install the required dependencies:
