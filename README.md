@@ -1,7 +1,6 @@
-# My Virtual Camera
-
+# Auto Face Framing
 ## Overview
-My Virtual Camera is a Python application designed to provide a virtual camera output that detects and tracks the user's face in real-time. The application utilizes OpenCV for face detection and tracking, ensuring that the user's face remains centered in the frame while providing a smooth video output. This is particularly useful for video conferencing applications, allowing users to maintain a professional appearance during calls.
+Auto Face Framing is a Python application designed to provide a virtual camera output that detects and tracks the user's face in real-time. The application utilizes OpenCV for face detection and tracking, ensuring that the user's face remains centered in the frame while providing a smooth video output. This is particularly useful for video conferencing applications, allowing users to maintain a professional appearance during calls.
 
 ## Features
 - Real-time face detection using OpenCV.
