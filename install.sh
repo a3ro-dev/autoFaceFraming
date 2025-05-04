@@ -44,7 +44,7 @@ echo "Found $python_cmd version $python_version"
 
 # Install the package
 echo "Installing Auto Face Framing package..."
-$python_cmd -m pip install -e .
+$python_cmd -m pip install --user -e .
 if [ $? -ne 0 ]; then
     echo "Failed to install the package."
     echo "Installation failed."
