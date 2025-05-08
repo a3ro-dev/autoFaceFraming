@@ -22,34 +22,44 @@ Before installing Auto Face Framing, make sure you have:
 - A webcam or other camera device
 - Virtual camera driver (platform-specific, see below)
 
-### Installing from PyPI
+### Installing using the script
 
-1. Install the package using pip:
-   ```bash
-   pip install auto-face-framing
-   ```
+1.  **Clone the repository (if you haven't already):**
+    ```bash
+    git clone https://github.com/a3ro-dev/autoFaceFraming.git
+    cd autoFaceFraming
+    ```
 
-2. Install virtual camera driver for your operating system:
+2.  **Run the installation script:**
+    This script will install the package and its dependencies. It will also guide you through installing virtual camera drivers if needed.
+    ```bash
+    chmod +x install.sh
+    ./install.sh
+    ```
 
-   **For Linux:**
-   ```bash
-   # For Ubuntu/Debian
-   sudo apt install v4l2loopback-dkms
-   
-   # For Fedora
-   sudo dnf install v4l2loopback
-   
-   # Then load the module
-   sudo modprobe v4l2loopback
-   ```
+3.  **Virtual Camera Driver Setup (if not handled by the script):**
+    The `install.sh` script attempts to help with this, but if you need to do it manually:
 
-   **For Windows:**
-   Install one of these virtual camera drivers:
-   - OBS Virtual Camera (included with [OBS Studio](https://obsproject.com/))
-   - [Unity Capture](https://github.com/schellingb/UnityCapture)
+    **For Linux:**
+    The script usually handles `v4l2loopback` installation. If not, you might need to run:
+    ```bash
+    # For Ubuntu/Debian
+    sudo apt install v4l2loopback-dkms
+    
+    # For Fedora
+    sudo dnf install v4l2loopback
+    
+    # Then load the module
+    sudo modprobe v4l2loopback
+    ```
 
-   **For macOS:**
-   - OBS Virtual Camera (included with [OBS Studio](https://obsproject.com/))
+    **For Windows:**
+    Install one of these virtual camera drivers:
+    - OBS Virtual Camera (included with [OBS Studio](https://obsproject.com/))
+    - [Unity Capture](https://github.com/schellingb/UnityCapture)
+
+    **For macOS:**
+    - OBS Virtual Camera (included with [OBS Studio](https://obsproject.com/))
 
 ## Basic Usage
 
@@ -271,4 +281,4 @@ If you're experiencing lag or performance issues:
 
 For more information, visit: [https://github.com/a3ro-dev/autoFaceFraming](https://github.com/a3ro-dev/autoFaceFraming)
 
-© 2025 Akshat Kushwaha | [@a3rodev](https://twitter.com/a3rodev) 
+© 2025 Akshat Kushwaha | [@a3rodev](https://twitter.com/a3rodev)
