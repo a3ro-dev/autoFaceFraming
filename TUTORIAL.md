@@ -61,6 +61,50 @@ Before installing Auto Face Framing, make sure you have:
     **For macOS:**
     - OBS Virtual Camera (included with [OBS Studio](https://obsproject.com/))
 
+### Windows-Specific Notes
+
+When installing on Windows, you may encounter an issue where the `start-face-framing` command is not found after installation. This happens because the Python scripts directory is not in your system PATH. You can resolve this in one of these ways:
+
+1. **Run the module directly** (recommended for Git Bash/MinGW users):
+   ```bash
+   python -m autoFaceFraming.cli
+   ```
+
+2. **Find and use the full path** to the script:
+   ```bash
+   # PowerShell - find the script location
+   $scriptPath = (python -c "import sys, os; print(os.path.join(os.path.dirname(sys.executable), 'Scripts', 'start-face-framing.exe'))")
+   & $scriptPath
+   
+   # CMD
+   python -c "import sys, os; print(os.path.join(os.path.dirname(sys.executable), 'Scripts', 'start-face-framing.exe'))"
+   # Then run the path that was printed
+   ```
+
+3. **Add Python Scripts to PATH** (permanent solution):
+   - Find your Python Scripts directory (shown in installation warnings)
+   - Add it to your PATH environment variable:
+     - Search for "Environment Variables" in Windows search
+     - Edit the "Path" variable
+     - Add the Scripts directory path
+     - Restart your terminal
+
+### Terminal Encoding Issues
+
+If you encounter Unicode encoding errors when running the application on Windows (especially in Git Bash/MinGW), you can use the following options:
+
+1. **Disable Unicode characters:**
+   ```bash
+   python -m autoFaceFraming.cli --no-unicode
+   ```
+
+2. **Disable fancy UI completely:**
+   ```bash
+   python -m autoFaceFraming.cli --no-fancy
+   ```
+
+3. **Use a different terminal:** Windows Command Prompt or PowerShell generally provide better Unicode support than Git Bash.
+
 ## Basic Usage
 
 ### Starting the Application

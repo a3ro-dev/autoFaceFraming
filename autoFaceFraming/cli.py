@@ -14,6 +14,10 @@ import time
 from typing import Dict, Any, Optional, List, Tuple
 import shutil
 
+# Initialize colorama early for Windows terminal color support
+import colorama
+colorama.init()
+
 from .face_detector import FaceDetector
 from .tracker import Tracker
 from .camera_stream import CameraStream, load_config
@@ -62,9 +66,29 @@ def get_terminal_size() -> Tuple[int, int]:
     """Get terminal size (width, height)"""
     return shutil.get_terminal_size((80, 24))
 
+def print_plain_header() -> None:
+    """Print a simple ASCII header for terminals that don't support Unicode"""
+    print()
+    print("=========================================")
+    print("          AUTO FACE FRAMING              ")
+    print("=========================================")
+    print("  Smart camera framing system for all    ")
+    print("  your video conferencing needs!         ")
+    print("=========================================")
+    print()
 
-def print_header() -> None:
+def print_header(use_fancy_ui: bool = True, use_unicode: bool = True) -> None:
     """Print an attractive header for the application."""
+    # If fancy UI is disabled, print a simple header and return
+    if not use_fancy_ui:
+        print_plain_header()
+        return
+        
+    # If unicode is explicitly disabled, print a simple header and return
+    if not use_unicode:
+        print_plain_header()
+        return
+        
     term_width, _ = get_terminal_size()
     
     header = [
@@ -88,10 +112,15 @@ def print_header() -> None:
     padding_str = " " * padding
     
     print()
-    for line in header:
-        print(f"{Colors.CYAN}{padding_str}{line}{Colors.RESET}")
-    print()
-
+    
+    # Try to print fancy Unicode header with colors, fall back to plain ASCII if it fails
+    try:
+        for line in header:
+            print(f"{Colors.CYAN}{padding_str}{line}{Colors.RESET}")
+        print()
+    except UnicodeEncodeError:
+        logger.warning("Terminal doesn't support Unicode characters. Falling back to plain ASCII header.")
+        print_plain_header()
 
 def print_section_header(text: str) -> None:
     """Print a section header with decorative elements."""
@@ -150,6 +179,8 @@ def parse_arguments() -> argparse.Namespace:
                       help='Camera index to use (default: -1 for auto-detection)')
     parser.add_argument('--no-fancy', action='store_true',
                       help='Disable fancy terminal UI')
+    parser.add_argument('--no-unicode', action='store_true',
+                      help='Disable Unicode characters in terminal output')
     parser.add_argument('--style', type=str, choices=[s.name.lower() for s in SpinnerStyle], default='braille',
                       help='Spinner style for loading animations')
     return parser.parse_args()
@@ -280,8 +311,9 @@ def main() -> int:
     # Parse command line arguments
     args = parse_arguments()
     
-    # Decide whether to use fancy UI
+    # Decide whether to use fancy UI and Unicode
     use_fancy_ui = not args.no_fancy
+    use_unicode = not args.no_unicode
     
     # Get spinner style from arguments
     spinner_style = SpinnerStyle[args.style.upper()] if args.style else SpinnerStyle.BRAILLE
@@ -289,7 +321,7 @@ def main() -> int:
     # Show version and exit if requested
     if args.version:
         if use_fancy_ui:
-            print_header()
+            print_header(use_fancy_ui, use_unicode)
         show_version()
         return 0
     
@@ -299,7 +331,7 @@ def main() -> int:
     
     # Show fancy header
     if use_fancy_ui:
-        print_header()
+        print_header(use_fancy_ui, use_unicode)
         print_section_header("Starting Auto Face Framing")
     else:
         print("\nStarting Auto Face Framing...\n")
@@ -504,4 +536,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())

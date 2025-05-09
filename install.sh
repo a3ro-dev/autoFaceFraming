@@ -140,13 +140,34 @@ echo "        Installation Complete!           "
 echo "========================================="
 echo
 echo "To run Auto Face Framing:"
-echo "  start-face-framing"
+if [ "$OS" = "windows" ]; then
+    echo "  Method 1: Use the batch file (recommended for Windows):"
+    echo "     ./start-face-framing.bat"
+    echo ""
+    echo "  Method 2: Run the Python module directly:"
+    echo "     python -m autoFaceFraming.cli"
+    echo ""
+    echo "  Method 3: If you added Python Scripts to your PATH:"
+    echo "     start-face-framing"
+else
+    echo "  Method 1: Using the shell script:"
+    echo "     ./start-face-framing.sh"
+    echo ""
+    echo "  Method 2: Using the installed entry point:"
+    echo "     start-face-framing"
+    echo ""
+    echo "  Method 3: Running the Python module directly:"
+    echo "     python -m autoFaceFraming.cli"
+fi
 echo
-echo "For additional options:"
-echo "  start-face-framing --help"
+echo "For additional options, add --help to any of the above commands."
 echo
 echo "For a detailed tutorial:"
-echo "  less TUTORIAL.md"
+if [ "$OS" = "windows" ]; then
+    echo "  notepad TUTORIAL.md   or   type TUTORIAL.md"
+else
+    echo "  less TUTORIAL.md"
+fi
 echo
 echo "Visit: https://github.com/a3ro-dev/autoFaceFraming"
 echo "Twitter: @a3rodev"

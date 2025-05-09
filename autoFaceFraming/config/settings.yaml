@@ -29,16 +29,16 @@ tracking:
 
 # Display settings
 display:
-  show_debug: true  # Show debug overlay
+  show_debug: false  # Show debug overlay
   show_window: true  # Show preview window (in addition to virtual camera)
   virtual_output: true  # Send to virtual camera
   hud_alpha: 0.7  # HUD transparency (0.0-1.0)
   
 # Advanced settings
 advanced:
-  stabilize_video: false  # Apply extra video stabilization (may impact performance)
-  use_threading: false  # Use threaded processing (experimental)
-  frame_buffer_size: 5  # Frame buffer size for smoother processing
+  stabilize_video: true  # Apply extra video stabilization (may impact performance)
+  use_threading: true  # Use threaded processing (experimental)
+  frame_buffer_size: 10  # Frame buffer size for smoother processing
 
 # Output settings
 output:
