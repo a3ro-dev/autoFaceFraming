@@ -20,6 +20,85 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
     OS="windows"
     echo "Detected Windows OS"
+    
+    # On Windows, try to add Python to PATH if needed
+    if [ "$OS" = "windows" ]; then
+        echo "Checking if Python is in PATH..."
+        python_in_path=false
+        if command -v python &>/dev/null; then
+            python_in_path=true
+            echo "Python is already in PATH."
+        elif command -v py &>/dev/null; then
+            python_in_path=true
+            echo "Python launcher (py) is in PATH."
+        else
+            echo "Python not found in PATH."
+        fi
+        
+        if [ "$python_in_path" = false ]; then
+            echo "Attempting to add Python to PATH..."
+            
+            # Try to find Python installation directory
+            for py_dir in "/c/Python"* "/c/Program Files/Python"* "/c/Users/$USER/AppData/Local/Programs/Python"*; do
+                if [ -d "$py_dir" ]; then
+                    echo "Found Python at: $py_dir"
+                    echo "Adding Python to PATH for this session..."
+                    export PATH="$py_dir:$py_dir/Scripts:$PATH"
+                    
+                    # Create a PowerShell script to add Python to PATH permanently
+                    echo "Creating a script to permanently add Python to PATH..."
+                    cat > add_python_to_path.ps1 << EOF
+\$pythonDir = "$py_dir"
+\$pythonScriptsDir = "$py_dir\\Scripts"
+
+# Get the current PATH from the registry
+\$currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+
+# Check if Python paths are already in PATH
+\$pathsToAdd = @()
+if (\$currentPath -notlike "*\$pythonDir*") {
+    \$pathsToAdd += \$pythonDir
+}
+if (\$currentPath -notlike "*\$pythonScriptsDir*") {
+    \$pathsToAdd += \$pythonScriptsDir
+}
+
+if (\$pathsToAdd.Count -gt 0) {
+    # Add Python paths to PATH
+    \$newPath = \$currentPath
+    foreach (\$path in \$pathsToAdd) {
+        if (\$newPath) {
+            \$newPath = "\$newPath;\$path"
+        } else {
+            \$newPath = "\$path"
+        }
+    }
+    
+    # Update PATH in the registry
+    [Environment]::SetEnvironmentVariable("PATH", \$newPath, "User")
+    Write-Host "Python has been added to your PATH. You may need to restart your terminal or computer for changes to take effect."
+} else {
+    Write-Host "Python is already in your PATH."
+}
+EOF
+                    
+                    echo "To permanently add Python to PATH, please run the following command as Administrator in PowerShell:"
+                    echo "    powershell -ExecutionPolicy Bypass -File add_python_to_path.ps1"
+                    break
+                fi
+            done
+            
+            if [ ! -f "add_python_to_path.ps1" ]; then
+                echo "Could not locate Python installation. Please add Python to PATH manually."
+                echo "Typically, you can do this by:"
+                echo "1. Right-click on 'This PC' and select 'Properties'"
+                echo "2. Click on 'Advanced system settings'"
+                echo "3. Click on 'Environment Variables'"
+                echo "4. Under 'User variables', select 'Path' and click 'Edit'"
+                echo "5. Click 'New' and add the path to your Python installation and the Scripts folder"
+            fi
+        fi
+    fi
 else
     echo "Unsupported OS: $OSTYPE"
     echo "The install script might not work correctly. Proceeding anyway..."
@@ -135,9 +214,15 @@ if [ ! -f "models/face_detector/deploy.prototxt" ] || [ ! -f "models/face_detect
 fi
 
 echo
-echo "========================================="
-echo "        Installation Complete!           "
-echo "========================================="
+echo "╭───────────────────────────────────────────────────────────────╮"
+echo "│                                                               │"
+echo "│   █ █▄░█ █▀ ▀█▀ ▄▀█ █░░ █░░ ▄▀█ ▀█▀ █ █▀█ █▄░█               │"
+echo "│   █ █░▀█ ▄█ ░█░ █▀█ █▄▄ █▄▄ █▀█ ░█░ █ █▄█ █░▀█               │"
+echo "│                                                               │"
+echo "│                █▀▀ █▀█ █▀▄▀█ █▀█ █░░ █▀▀ ▀█▀ █▀▀ █           │"
+echo "│                █▄▄ █▄█ █░▀░█ █▀▀ █▄▄ ██▄ ░█░ ██▄ ▄           │"
+echo "│                                                               │"
+echo "╰───────────────────────────────────────────────────────────────╯"
 echo
 echo "To run Auto Face Framing:"
 if [ "$OS" = "windows" ]; then

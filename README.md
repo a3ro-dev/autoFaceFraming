@@ -40,6 +40,28 @@ my-virtual-camera
 
 3. Configure the settings in `config/settings.yaml` as needed.
 
+### Windows
+
+Option 1 (Recommended): Run the automated installer with admin rights
+```
+setup_windows.bat
+```
+This will:
+- Add Python to your PATH (if needed)
+- Install required dependencies
+- Create necessary configuration files
+- Set up the virtual camera
+
+Option 2: Manual installation
+```
+install.sh
+```
+
+### macOS and Linux
+```
+./install.sh
+```
+
 ## Usage
 To run the application, execute the following command:
 ```
