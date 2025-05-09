@@ -161,8 +161,8 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Auto Face Framing Virtual Camera')
     parser.add_argument('--config', type=str, 
                       help='Path to configuration file (default: installed config/settings.yaml)')
-    parser.add_argument('--debug', action='store_true', default=True,
-                      help='Show debug information on frames (default: True)')
+    parser.add_argument('--debug', action='store_true', default=None,
+                      help='Show debug information on frames (config default: settings.yaml display.show_debug)')
     parser.add_argument('--no-virtual', action='store_true',
                       help='Disable virtual camera output')
     parser.add_argument('--resolution', type=str, default='1280x720',
@@ -227,23 +227,60 @@ def check_dependencies() -> Dict[str, bool]:
         return dependencies
 
 
+def ensure_user_config_exists() -> str:
+    """
+    Ensures user config file exists by copying the default if needed.
+    
+    Returns:
+        Path to the user config file
+    """
+    # Determine paths
+    current_dir = os.getcwd()
+    user_config_dir = os.path.join(current_dir, 'config')
+    user_config = os.path.join(user_config_dir, 'settings.yaml')
+    
+    # If user config doesn't exist, create it from default
+    if not os.path.exists(user_config):
+        # Get default config path
+        package_config = os.path.join(os.path.dirname(__file__), 'config', 'settings.yaml')
+        
+        # Create directory if needed
+        if not os.path.exists(user_config_dir):
+            os.makedirs(user_config_dir)
+            
+        # Copy default config to user config
+        import shutil
+        shutil.copy2(package_config, user_config)
+        logger.info(f"Created new user config at {user_config}")
+    
+    return os.path.abspath(user_config)
+
 def get_default_config_path() -> str:
     """Get the path to the default configuration file."""
-    # First try to use the config file in the current directory
-    if os.path.exists('config/settings.yaml'):
-        return 'config/settings.yaml'
+    # First try to use the config file in the current directory or project root
+    current_dir = os.getcwd()
+    user_config = os.path.join(current_dir, 'config', 'settings.yaml')
+    
+    if os.path.exists(user_config):
+        return os.path.abspath(user_config)
+    
+    # Check one level up in case run from inside a project directory
+    parent_config = os.path.join(os.path.dirname(current_dir), 'config', 'settings.yaml')
+    if os.path.exists(parent_config):
+        return os.path.abspath(parent_config)
     
     # Then try to use the config file in the package directory
     import pkg_resources
     try:
         path = pkg_resources.resource_filename('autoFaceFraming', 'config/settings.yaml')
         if os.path.exists(path):
-            return path
+            return os.path.abspath(path)
     except:
         pass
     
     # Finally fallback to the config file in the package
-    return os.path.join(os.path.dirname(__file__), 'config', 'settings.yaml')
+    package_config = os.path.join(os.path.dirname(__file__), 'config', 'settings.yaml')
+    return os.path.abspath(package_config)
 
 
 def show_version() -> None:
@@ -342,13 +379,18 @@ def main() -> int:
     if args.config:
         config_path = args.config
     else:
-        config_path = get_default_config_path()
+        # Create user config if it doesn't exist and use that
+        config_path = ensure_user_config_exists()
     
     # Load configuration settings
     with CLISpinner("Loading configuration", style=spinner_style) as spinner:
         logger.debug(f"Loading configuration from {config_path}")
         config = load_config(config_path)
-        spinner.update_text(f"Loading configuration from {config_path}")
+        
+        # Make it clear which config file is being used in the UI
+        config_type = "User config" if "autoFaceFraming/config" not in config_path else "Default config"
+        spinner.update_text(f"Loaded {config_type} from {os.path.basename(os.path.dirname(config_path))}/{os.path.basename(config_path)}")
+        logger.debug(f"Using {config_type}: {config_path}")
         time.sleep(0.5)  # Small delay for visual effect
     
     # Parse resolution string to width and height
@@ -367,18 +409,24 @@ def main() -> int:
         camera_resolution = config.get('camera', {}).get('resolution', {"width": width, "height": height})
         frame_rate = config.get('camera', {}).get('frame_rate', args.fps)
         camera_index = config.get('camera', {}).get('camera_index', args.camera_index)
+        
+        # Load debug settings from config if command line arg is not provided
+        if args.debug is None:  # None means the user didn't explicitly set --debug
+            args.debug = config.get('display', {}).get('show_debug', False)
 
     if use_fancy_ui:
         print_section_header("Configuration")
         print_info_line("Resolution", f"{width}x{height}", Colors.BRIGHT_GREEN)
         print_info_line("Frame rate", f"{frame_rate} fps", Colors.BRIGHT_GREEN)
         print_info_line("Camera index", f"{camera_index}", Colors.BRIGHT_GREEN)
+        print_info_line("Debug mode", f"{'Enabled' if args.debug else 'Disabled'}", Colors.BRIGHT_GREEN if args.debug else Colors.BRIGHT_YELLOW) 
         print()
     else:
         print("Initializing Auto Face Framing...")
         print(f"Resolution: {width}x{height}")
         print(f"Frame rate: {frame_rate} fps")
         print(f"Camera index: {camera_index}")
+        print(f"Debug mode: {'Enabled' if args.debug else 'Disabled'}")
     
     # Check dependencies
     dependencies = check_dependencies()
@@ -487,7 +535,7 @@ def main() -> int:
         
         # Start the main processing loop
         camera_stream.start_stream(
-            show_debug=args.debug, 
+            show_debug=args.debug,  # This now respects the config file setting
             virtual_output=not args.no_virtual,
             show_window=show_window
         )

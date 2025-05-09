@@ -30,7 +30,7 @@ tracking:
 
 # Display settings
 display:
-  show_debug: true  # Show debug overlay
+  show_debug: false  # Show debug overlay
   show_window: true  # Show preview window (in addition to virtual camera)
   virtual_output: true  # Send to virtual camera
   hud_alpha: 0.7  # HUD transparency (0.0-1.0)

@@ -544,7 +544,11 @@ def load_config(config_path: str) -> Optional[Dict[str, Any]]:
         if os.path.exists(config_path):
             with open(config_path, 'r') as file:
                 config = yaml.safe_load(file)
-                print(f"Loaded configuration from {config_path}")
+                
+                # Just log the filename and parent directory for cleaner output
+                config_display = f"{os.path.basename(os.path.dirname(config_path))}/{os.path.basename(config_path)}"
+                config_type = "user" if "autoFaceFraming/config" not in config_path else "default"
+                print(f"Loaded {config_type} configuration from {config_display}")
                 return config
         else:
             print(f"Configuration file not found: {config_path}")

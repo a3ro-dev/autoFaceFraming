@@ -10,7 +10,7 @@ camera:
   
 # Face detection settings
 face_detection:
-  detector_type: "haar"  # Options: "haar" or "dnn"
+  detector_type: "haaryo"  # Options: "haar" or "dnn"
   confidence_threshold: 0.5  # Only used for DNN detector
   min_face_size: 30  # Minimum face size to detect (pixels)
   model: haarcascade_frontalface_default.xml
