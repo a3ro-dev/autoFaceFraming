@@ -158,7 +158,10 @@ def print_list_item(item: str, indent: int = 2) -> None:
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments for the application."""
-    parser = argparse.ArgumentParser(description='Auto Face Framing Virtual Camera')
+    parser = argparse.ArgumentParser(
+        prog='start-face-framing',  # Consistent program name regardless of how it's invoked
+        description='Auto Face Framing Virtual Camera'
+    )
     parser.add_argument('--config', type=str, 
                       help='Path to configuration file (default: installed config/settings.yaml)')
     parser.add_argument('--debug', action='store_true', default=None,

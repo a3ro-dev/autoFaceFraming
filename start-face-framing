@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# This is a wrapper script that simply calls the Python module with all arguments
+# This ensures consistent behavior between direct module calls and entry point script
+python3 -m autoFaceFraming.cli "$@"
