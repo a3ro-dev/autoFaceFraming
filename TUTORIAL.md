@@ -18,7 +18,7 @@ This tutorial will guide you through the process of setting up and using Auto Fa
 
 Before installing Auto Face Framing, make sure you have:
 
-- Python 3.8 or newer
+- Python 3.10 or newer
 - A webcam or other camera device
 - Virtual camera driver (platform-specific, see below)
 
